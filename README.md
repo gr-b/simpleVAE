@@ -1,7 +1,8 @@
 # SimpleVAE implementation in Pytorch - with added interactive visualization
 ![interactive](interactive_plot.png)
 
-Code is complete with small explanations of the VAE
+Code is complete with small explanations of the VAE.
+This latent space is a bit different from the plain autoencoder. The sampling around encoded points causes the latent space to be more continuous. Additionally, the objective to put the means as close to 0 and deviations as close to 1 as possible (KL loss) makes the latent space more uniform.
 
 
 ## How to run
