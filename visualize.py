@@ -31,7 +31,7 @@ if os.path.exists('./checkpoints/model.pt'):
 	encoded_means, encoded_logvars = model.forward_encoder(images)
 	encoded_means, encoded_logvars = encoded_means.detach().cpu(), encoded_logvars.detach().cpu()
 
-	sizes = 8 #np.exp(0.5*encoded_logvars[:,0])*1000*10	
+	sizes = np.exp(0.5*encoded_logvars[:,0])*100*2
 
 	fig, ax = plt.subplots(1, 2)
 	ax[0].scatter(encoded_means[:,0], encoded_means[:,1],

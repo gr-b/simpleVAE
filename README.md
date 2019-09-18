@@ -1,5 +1,5 @@
 # SimpleVAE implementation in Pytorch - with added interactive visualization
-<Insert picture of visualization here>
+![interactive](interactive_plot.png)
 
 Code is complete with small explanations of the VAE
 

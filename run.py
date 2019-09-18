@@ -15,9 +15,9 @@ from torchvision.utils import save_image
 from vae import VAE
 ##################################
 
-batch_size = 256
+batch_size = 128
 batch_size_test = 1000 
-
+num_epochs = 50
 
 ###################################
 #Image loading and preprocessing
@@ -35,19 +35,24 @@ testLoader = torch.utils.data.DataLoader(
 	batch_size=batch_size_test, shuffle=True)
 
 
-num_epochs = 5
+#######################
+# Training
+#######################
+
 
 model = VAE().cuda()
 
 # We are using a Sigmoid layer at the end so we must use CE loss. Why?
 # ---> Rather, paper said to use CE loss.
 def lossFun(x, x_prime, mu, logvar):
-	binary_cross_entropy = F.binary_cross_entropy(x, x_prime, reduction='sum')
-	
-	distance_from_standard_normal = 0
+	binary_cross_entropy = F.binary_cross_entropy(x_prime, x, reduction='sum')
+
+	distance_from_standard_normal = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
+	# KL Divergence between the learned distribution and Normal(0, 1)
+
 	return binary_cross_entropy + distance_from_standard_normal
 
-optimizer = torch.optim.Adam(model.parameters(), weight_decay=1e-3)
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 
 
 
@@ -59,14 +64,16 @@ for epoch in range(num_epochs):
 		x, _ = data # Each 'data' is an image, label pair
 		x = Variable(x).cuda() # Input image must be a tensor and moved to the GPU			
 
-		# Forward pass
-		x_prime, mu, logvar = model(x) # pass through into a reconstructed image
-		x = x.view(-1, 28*28)		
-		loss = lossFun(x_prime, x, mu, logvar)
-
-		# Backward pass
 		optimizer.zero_grad() # Backward function accumulates gradients, so we don't want to mix up gradients. 
 				      # Set to zero instead.
+
+		# Forward pass
+		x_prime, mu, logvar = model(x) # pass through into a reconstructed image
+		x = x.view(-1, 28*28)
+		loss = lossFun(x, x_prime, mu, logvar)
+
+		# Backward pass
+		
 		loss.backward()
 		optimizer.step()
 	elapsed = time.time() - start
@@ -79,9 +86,7 @@ torch.save(model, './checkpoints/model.pt')
 # Testing
 #######################
 
-
 images, labels = iter(testLoader).next()
-#print(labels)
 images = Variable(images).cuda()
 reconstructions, mu, logvar = model(images)
 reconstructions = reconstructions.view(-1, 1, 28, 28)
